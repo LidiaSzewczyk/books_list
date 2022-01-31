@@ -2,5 +2,40 @@
 {% load static %}
 
 {% block content %}
-BOOK LIST
+    <h1>BOOK LIST</h1>
+
+
+    <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Author</th>
+                <th scope="col">Published</th>
+                <th scope="col">ISBN</th>
+                <th scope="col">Pages</th>
+                <th scope="col">Link</th>
+                <th scope="col">Language</th>
+            </tr>
+            </thead>
+ {% for book in books %}
+
+            <tbody>
+
+            <tr>
+
+                <td><a href="{% url 'books:bookdetail' book.pk %}">{{ book.title }}</a></td>
+                <td>{{ book.authors }}</td>
+                <td>{{ book.publishedDate }}</td>
+                <td>{{ book.ISBN_13 }}</td>
+                <td>{{ book.pageCount }}</td>
+                <td>{{ book.canonicalVolumeLink }}</td>
+                <td>{{ book.language }}</td>
+            </tr>
+            </tbody>
+        </table>
+
+
+    {% endfor %}
+
+
 {% endblock content %}
