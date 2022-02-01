@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, CreateView, DeleteView, UpdateView, DetailView
 from django.views.generic.edit import FormMixin
 
@@ -23,11 +23,28 @@ class BooksListView(FormMixin, ListView):
         print(self.request.GET.get('filtering', []))
         print(20*'*')
         ctx = super(BooksListView, self).get_context_data()
-        ctx['title'] = Book.objects.all()
-        ctx['author'] = self.request.GET.get('ordering', 'title')
+        # ctx['title'] = Book.objects.all()
+        # ctx['author'] = self.request.GET.get('ordering', 'title')
         ctx['filtering'] = self.request.GET.get('filtering', [])
+        print('ctx', ctx)
         return ctx
+    #
+    def get_queryset(self):
+        filters = self.request.GET.get('filtering',[])
+        print('filters', filters)
+        qs = super().get_queryset()
+        if filters and filters != '[]':
+            print(filters)
+            qs = qs.filter(title__contains=filters)
 
+        print('qs', qs)
+        return qs
+
+    def post(self, request, *args, **kwargs ):
+        cats = self.request.POST.get('title', [])
+        print('cats',cats)
+        redirect_url = reverse('books:bookslist')
+        return redirect(f'{redirect_url}?filtering={cats}')
 
 # class BookDetailView(DetailView):
 #     model = Book

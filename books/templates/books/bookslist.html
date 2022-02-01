@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block form %}
-            <form class="d-flex" action="{% url 'books:bookslist' %}" method="get">{% csrf_token %}
+            <form class="d-flex" action="" method="post">{% csrf_token %}
                 {{ form.as_p}}
         <button class="btn btn-outline-success" type="submit">Search</button>
       </form>
