@@ -2,17 +2,20 @@
 {% load static %}
 
 {% block content %}
-<h2>{{ book.title }}</h2>
-<ul class="list-group">
-    <li class="list-group-item">Author: {{ book.authors }}</li>
-    <li class="list-group-item">Published: {{ book.publishedDate }}</li>
-    <li class="list-group-item">ISBN: {{ book.ISBN_13 }}</li>
-    <li class="list-group-item">Pages: {{ book.pageCount }}</li>
-    <li class="list-group-item">Link: {{ book.canonicalVolumeLink }}</li>
-    <li class="list-group-item">Language: {{ book.language }}</li>
-</ul>
+    <h2>{{ book.title }}</h2>
+    <ul class="list-group">
+        <li class="list-group-item">Author: {{ book.authors }}</li>
+        <li class="list-group-item">Published: {{ book.publishedDate }}</li>
+        <li class="list-group-item">ISBN: {{ book.ISBN_13 }}</li>
+        <li class="list-group-item">Pages: {{ book.pageCount }}</li>
+        <li class="list-group-item">Link: {{ book.canonicalVolumeLink }}</li>
+        <li class="list-group-item">Language: {{ book.language }}</li>
+    </ul>
 
 
-<a href="{% url 'books:bookupdate'  book.pk  %}">Edit</a>
-<a href="{% url 'books:bookdelete'  book.pk  %}">Delete</a>
+    <button type="button" class="btn btn-warning"><a href="{% url 'books:bookupdate' book.pk %}">Edit</a></button>
+    <form action="{% url 'books:bookdelete' book.pk %}" method="post">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Delete</button>
+        </form>
 {% endblock content %}

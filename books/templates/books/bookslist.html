@@ -1,41 +1,77 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block form %}
+            <form class="d-flex" action="{% url 'books:bookslist' %}" method="get">{% csrf_token %}
+                {{ form.as_p}}
+        <button class="btn btn-outline-success" type="submit">Search</button>
+      </form>
+{% endblock form %}
+
 {% block content %}
     <h1>BOOK LIST</h1>
 
 
     <table class="table">
-            <thead>
+        <thead>
+        <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Author</th>
+            <th scope="col">Published</th>
+            <th scope="col">ISBN</th>
+            <th scope="col">Pages</th>
+            <th scope="col">Link</th>
+            <th scope="col">Language</th>
+            <th scope="col">Delete</th>
+
+        </tr>
+        </thead>
+
+
+        <tbody>
+        {% for book in books %}
             <tr>
-                <th scope="col">Title</th>
-                <th scope="col">Author</th>
-                <th scope="col">Published</th>
-                <th scope="col">ISBN</th>
-                <th scope="col">Pages</th>
-                <th scope="col">Link</th>
-                <th scope="col">Language</th>
-            </tr>
-            </thead>
- {% for book in books %}
 
-            <tbody>
-
-            <tr>
-
-                <td><a href="{% url 'books:bookdetail' book.pk %}">{{ book.title }}</a></td>
+                <th scope="row"><a href="{% url 'books:bookupdate' book.pk %}">{{ book.title }}</a></th>
                 <td>{{ book.authors }}</td>
                 <td>{{ book.publishedDate }}</td>
                 <td>{{ book.ISBN_13 }}</td>
                 <td>{{ book.pageCount }}</td>
                 <td>{{ book.canonicalVolumeLink }}</td>
                 <td>{{ book.language }}</td>
+            <td>    <form action="{% url 'books:bookdelete' book.pk %}" method="post">
+        {% csrf_token %}
+        <button class="btn btn-outline-danger btn-sm" type="submit">Delete</button>
+        </form></td>
+
             </tr>
-            </tbody>
-        </table>
+        {% endfor %}
+        </tbody>
 
+    </table>
 
-    {% endfor %}
+            {% if page_obj.paginator.num_pages > 1 %}
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                        <li class="page-item"><a class="page-link"
+                                                 href="?page={{ page_obj.previous_page_number }}&ordering={{ ordering }}&filtering={{ filtering }}">{{ page_obj.previous_page_number }}</a>
+                        </li>
+                    {% endif %}
+                    <li class="page-item active" aria-current="page">
+                        <a class="page-link" href="#">{{ page_obj.number }}</a>
+                    </li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link"
+                                                 href="?page={{ page_obj.next_page_number }}&ordering={{ ordering }}&filtering={{ filtering }}">{{ page_obj.next_page_number }}</a>
+                        </li>
+                        <li class="page-item"><a class="page-link"
+                                                 href="?page={{ page_obj.paginator.num_pages }}&ordering={{ ordering }}&filtering={{ filtering }}">Last</a></li>
 
+                    {% endif %}
+
+                </ul>
+
+            {% endif %}
 
 {% endblock content %}
