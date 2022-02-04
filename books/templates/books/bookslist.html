@@ -1,77 +1,97 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load crispy_forms_tags %}
 
 {% block form %}
-            <form class="d-flex" action="" method="post">{% csrf_token %}
-                {{ form.as_p}}
-        <button class="btn btn-outline-success" type="submit">Search</button>
-      </form>
+  <p class="nav-item">Published &nbsp</p>
+    <form class="d-flex" action="" method="post">
+        {% csrf_token %}
+        {{ form| crispy }}
+        <button class="btn btn-outline-success btn-sm" type="submit">Search</button>
+    </form>
 {% endblock form %}
 
 {% block content %}
+{#    <div class="col-sm-11 col-12">#}
     <h1>BOOK LIST</h1>
 
-
-    <table class="table">
-        <thead>
-        <tr>
-            <th scope="col">Title</th>
-            <th scope="col">Author</th>
-            <th scope="col">Published</th>
-            <th scope="col">ISBN</th>
-            <th scope="col">Pages</th>
-            <th scope="col">Link</th>
-            <th scope="col">Language</th>
-            <th scope="col">Delete</th>
-
-        </tr>
-        </thead>
-
-
-        <tbody>
-        {% for book in books %}
+    {% if  books %}
+        <table class="table">
+            <thead>
             <tr>
-
-                <th scope="row"><a href="{% url 'books:bookupdate' book.pk %}">{{ book.title }}</a></th>
-                <td>{{ book.authors }}</td>
-                <td>{{ book.publishedDate }}</td>
-                <td>{{ book.ISBN_13 }}</td>
-                <td>{{ book.pageCount }}</td>
-                <td>{{ book.canonicalVolumeLink }}</td>
-                <td>{{ book.language }}</td>
-            <td>    <form action="{% url 'books:bookdelete' book.pk %}" method="post">
-        {% csrf_token %}
-        <button class="btn btn-outline-danger btn-sm" type="submit">Delete</button>
-        </form></td>
-
+                <th scope="col">Title<a class="my_link arrow" href="?ordering=title" >&nbsp&#8593;&nbsp</a><a class="my_link arrow"  href="?ordering=-title">&#8595;</a></th>
+                <th scope="col">Author<a class="my_link arrow" href="?ordering=authors" >&nbsp&#8593;&nbsp</a><a class="my_link arrow"  href="?ordering=-authors">&#8595;</a></th>
+                <th scope="col">Published<a class="my_link arrow" href="?ordering=publisheddate" >&nbsp&#8593;&nbsp</a><a class="my_link arrow"  href="?ordering=-publisheddate">&#8595;</a></th>
+                <th scope="col">ISBN 10</th>
+                <th scope="col">ISBN 13</th>
+                <th scope="col">Pages</th>
+                <th scope="col">Link</th>
+                <th scope="col">Language</th>
+                <th scope="col">Delete</th>
             </tr>
-        {% endfor %}
-        </tbody>
+            </thead>
 
-    </table>
+            <tbody>
+            {% for book in books %}
+                <tr>
+                    <th scope="row"><a class="my_link" href="{% url 'books:bookupdate' book.pk %}">{{ book.title }}</a></th>
+                    <td>{{ book.authors }}</td>
+                    <td>{{ book.publisheddate }}</td>
+                    <td>{% if  book.ISBN_10 %} {{ book.ISBN_10 }}  {% else %} No data {% endif %}</td>
+                    <td>{% if  book.ISBN_13 %} {{ book.ISBN_13 }}  {% else %} No data {% endif %}</td>
+                    <td>{% if  book.pageCount %} {{ book.pageCount }}  {% else %} No data {% endif %}</td>
+                    <td>{% if  book.canonicalVolumeLink %}<a class="my_link" href="{{ book.canonicalVolumeLink }}">
+                        {{ book.canonicalVolumeLink|truncatechars:20 }}  </a>{% else %} No data {% endif %}</td>
+                    <td>{{ book.language }}</td>
+                    <td>
+                        <form action="{% url 'books:bookdelete' book.pk %}" method="post">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-danger btn-sm" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
 
-            {% if page_obj.paginator.num_pages > 1 %}
-                <ul class="pagination">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
-                        <li class="page-item"><a class="page-link"
-                                                 href="?page={{ page_obj.previous_page_number }}&ordering={{ ordering }}&filtering={{ filtering }}">{{ page_obj.previous_page_number }}</a>
-                        </li>
-                    {% endif %}
-                    <li class="page-item active" aria-current="page">
-                        <a class="page-link" href="#">{{ page_obj.number }}</a>
+        {% if page_obj.paginator.num_pages > 1 %}
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page=1&ordering={{ ordering }}&filtering={{ filtering }}&type={{ select_type.0 }}&min={{ min_y }}&max={{ max_y }}">First</a>
                     </li>
-                    {% if page_obj.has_next %}
-                        <li class="page-item"><a class="page-link"
-                                                 href="?page={{ page_obj.next_page_number }}&ordering={{ ordering }}&filtering={{ filtering }}">{{ page_obj.next_page_number }}</a>
-                        </li>
-                        <li class="page-item"><a class="page-link"
-                                                 href="?page={{ page_obj.paginator.num_pages }}&ordering={{ ordering }}&filtering={{ filtering }}">Last</a></li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}&ordering={{ ordering }}&filtering={{ filtering }}&type={{ select_type }}&min={{ min_y }}&max={{ max_y }}">{{ page_obj.previous_page_number }}</a>
+                    </li>
+                {% endif %}
+                <li class="page-item active" aria-current="page">
+                    <a class="page-link" href="#">{{ page_obj.number }}</a>
+                </li>
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}&ordering={{ ordering }}&filtering={{ filtering }}&type={{ select_type }}&min={{ min_y }}&max={{ max_y }}">{{ page_obj.next_page_number }}</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.paginator.num_pages }}&ordering={{ ordering }}&filtering={{ filtering }}&type={{ select_type }}&min={{ min_y }}&max={{ max_y }}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        {% endif %}
 
-                    {% endif %}
+    {% else %}
+        No books
+    {% endif %}
+{#    </div>#}
 
-                </ul>
-
-            {% endif %}
-
+{#    <div class="col-sm-1 col-12">#}
+{#    <form action="" method="post">#}
+{#            <p class="nav-item">Published</p>#}
+{#        {% csrf_token %}#}
+{#        {{ form| crispy }}#}
+{#        <button class="btn btn-outline-success" type="submit">Search</button>#}
+{#    </form></div>#}
 {% endblock content %}

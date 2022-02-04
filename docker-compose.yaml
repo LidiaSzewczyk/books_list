@@ -13,6 +13,8 @@ services:
       - 8002:8002
     depends_on:
       - db
+    env_file:
+      - ./envs/.env
     environment:
       - "DB_NAME=postgres"
       - "DB_USER=postgres"

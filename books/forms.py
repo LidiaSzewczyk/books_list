@@ -1,8 +1,14 @@
-from django.forms import forms, CharField, IntegerField, NumberInput
+from datetime import datetime
+
+from django import forms
 
 
 class FilterForm(forms.Form):
-    title= CharField(label='Title', required=None)
-    # author= CharField(label='Authors', required=None)
-    # language= CharField(label='Language', required=None)
-    # published = IntegerField(label='Publish date', required=None, widget=NumberInput(attrs={'type':'range', 'step': '1', 'min': '1000', 'max': '2100', 'id':'myRange'}))
+    min_year = forms.IntegerField(label='min year', required=None,
+                                  max_value=int(datetime.now().strftime('%Y')))
+    max_year = forms.IntegerField(label='max year', required=None, max_value=int(datetime.now().strftime('%Y')))
+    select_type = forms.ChoiceField(label='',
+                                    choices=(('1', 'Title'), ('2', 'Author'), ('3', 'Language'),
+                                             ('4', ('All'))),
+                                    widget=forms.RadioSelect, required=None)
+    text_search = forms.CharField(label='', required=None)
