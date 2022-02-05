@@ -15,12 +15,7 @@ services:
       - db
     env_file:
       - ./envs/.env
-    environment:
-      - "DB_NAME=postgres"
-      - "DB_USER=postgres"
-      - "DB_PASSWORD=postgres"
-      - "DB_HOST=db"
-      - "DB_PORT=5432"
+
 
   db:
     image: library/postgres:14-alpine
@@ -28,6 +23,8 @@ services:
       - books_network
     volumes:
       -  postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./envs/.env.db
     environment:
       - "POSTGRES_HOST_AUTH_METHOD=trust"
 

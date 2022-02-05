@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.db.models.functions import Lower
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, CreateView, DeleteView, UpdateView, DetailView
@@ -14,10 +15,12 @@ class BooksListView(FormMixin, ListView):
     context_object_name = 'books'
     paginate_by = 4
     ordering = ['title']
+    # ordering = Book.objects.order_by(Lower('title'))
     form_class = FilterForm
 
     def get_ordering(self):
         ordering = self.request.GET.get('ordering', 'title')
+
         return ordering
 
     def get_context_data(self, *, object_list=None, **kwargs):
