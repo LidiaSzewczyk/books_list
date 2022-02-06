@@ -6,12 +6,13 @@ from books.validators import validate_isnumeric, validate_not_numeric
 
 
 class Book(models.Model):
-    title = models.CharField(max_length=200)
-    authors = models.CharField(max_length=300)
+    title = models.CharField(max_length=1000)
+    authors = models.CharField(max_length=500, blank=True, null=True)
     publisheddate = models.IntegerField(verbose_name='Published year',
                                         validators=[MinValueValidator(-3000, message='Impossible year'),
                                                     MaxValueValidator(int(datetime.now().strftime('%Y')) + 1,
-                                                                      message='Impossible year')])
+                                                                      message='Impossible year')],
+                                        null=True, blank=True)
     ISBN_10 = models.CharField(max_length=10, blank=True, null=True,
                                validators=[MinLengthValidator(10, message='Incorrect data - 10 characters are needed.'),
                                            MaxLengthValidator(10,
@@ -23,7 +24,7 @@ class Book(models.Model):
     pageCount = models.CharField(verbose_name='Number of pages', max_length=6, validators=[validate_isnumeric],
                                  blank=True, null=True)
     canonicalVolumeLink = models.URLField(verbose_name='Link', null=True, blank=True)
-    language = models.CharField(validators=[validate_not_numeric], max_length=20)
+    language = models.CharField(validators=[validate_not_numeric], max_length=20, null=True, blank=True)
 
     def __str__(self):
         return self.title

@@ -40,7 +40,7 @@
                     <td>{% if  book.ISBN_10 %} {{ book.ISBN_10 }}  {% else %} No data {% endif %}</td>
                     <td>{% if  book.ISBN_13 %} {{ book.ISBN_13 }}  {% else %} No data {% endif %}</td>
                     <td>{% if  book.pageCount %} {{ book.pageCount }}  {% else %} No data {% endif %}</td>
-                    <td>{% if  book.canonicalVolumeLink %}<a class="my_link" href="{{ book.canonicalVolumeLink }}">
+                    <td>{% if  book.canonicalVolumeLink %}<a class="my_link" href="{{ book.canonicalVolumeLink }}" target="_blank">
                         {{ book.canonicalVolumeLink|truncatechars:20 }}  </a>{% else %} No data {% endif %}</td>
                     <td>{{ book.language }}</td>
                     <td>

@@ -1,11 +1,15 @@
+import json
+import urllib.request
+
+from django.contrib import messages
 from django.db.models import Q
 from django.db.models.functions import Lower
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, CreateView, DeleteView, UpdateView, DetailView
-from django.views.generic.edit import FormMixin
+from django.views.generic.edit import FormMixin, FormView
 
-from books.forms import FilterForm
+from books.forms import FilterForm, GoogleSearchForm, GoogleSelectForm
 from books.models import Book
 
 
@@ -15,7 +19,6 @@ class BooksListView(FormMixin, ListView):
     context_object_name = 'books'
     paginate_by = 4
     ordering = ['title']
-    # ordering = Book.objects.order_by(Lower('title'))
     form_class = FilterForm
 
     def get_ordering(self):
@@ -99,3 +102,87 @@ class BookUpdateView(UpdateView):
 class BookDeleteView(DeleteView):
     model = Book
     success_url = reverse_lazy('books:bookslist')
+
+
+def check_author(data):
+    if 'authors' in data['volumeInfo']:
+        return ', '.join(author for author in data['volumeInfo']['authors'])
+    return ''
+
+
+def check_key(data, key):
+    if key in data['volumeInfo']:
+        return data['volumeInfo'][key]
+    return ''
+
+
+def check_isbn(data, idx):
+    if 'industryIdentifiers' in data['volumeInfo']:
+        for element in data['volumeInfo']['industryIdentifiers']:
+            if element['type'] == idx:
+                return element['identifier']
+    return ''
+
+
+class GoogleSearchView(FormView):
+    template_name = 'books/googlelist.html'
+    form_class = GoogleSearchForm
+    success_url = reverse_lazy('books:bookslist')
+    google_api_url = 'https://www.googleapis.com/books/v1/volumes?q='
+
+    def get_form_class(self):
+        return GoogleSelectForm if self.request.session.get('data') else GoogleSearchForm
+
+    def get_form(self, *args, **kwargs):
+        data = self.request.session.get('data')
+        form = super().get_form(*args, **kwargs)
+        print('data z get form', data)
+
+        if data:
+            books = []
+            for item in data['items']:
+                new_book = [check_key(item, 'title'), check_author(item), check_key(item, 'publishedDate')[:4],
+                            check_key(item, 'language'), check_key(item, 'canonicalVolumeLink')]
+                new_book = ' - '.join(new_book)
+                choice = item['id'], new_book
+                books.append(choice)
+                form.fields['searched'].choices = books
+        return form
+
+    def form_valid(self, form):
+        main_search = form.cleaned_data.get('main_search', '').lower()
+        select_type = form.cleaned_data.get('select_type', '')
+        detail_search = form.cleaned_data.get('detail_search', '').lower()
+        search = f'{main_search}'
+
+        if select_type:
+            detail_search = f'+{select_type}:{detail_search}&'
+            search += detail_search
+
+        if search:
+            with urllib.request.urlopen(url=f'{self.google_api_url}{search}') as r:
+                response = r.read().decode('UTF-8')
+                data = json.loads(response)
+
+            if data.get('totalItems', 0) == 0:
+                messages.error(self.request, "No such book. Try again.")
+                return redirect(reverse('books:googlesearch'))
+
+            if data.get('totalItems') > 0:
+                self.request.session['data'] = data
+                return redirect(reverse('books:googlesearch'))
+
+        else:
+            data = self.request.session.get('data', {})
+            self.request.session.clear()
+            books = [book for book in data['items'] if book['id'] in form.cleaned_data.get('searched')]
+            for element in books:
+                Book.objects.create(title=element['volumeInfo']['title'],
+                                           authors=check_author(element),
+                                           publisheddate=int(check_key(element, 'publishedDate')[:4]) if check_key(element, 'publishedDate') else None,
+                                           ISBN_10= check_isbn(element, 'ISBN_10'),
+                                           ISBN_13= check_isbn(element,'ISBN_13'),
+                                           pageCount=check_key(element, 'pageCount'),
+                                           canonicalVolumeLink=check_key(element, 'canonicalVolumeLink'),
+                                           language=check_key(element, 'language'))
+        return redirect(reverse('books:bookslist'))
