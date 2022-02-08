@@ -25,3 +25,5 @@ class GoogleSearchForm(forms.Form):
 class GoogleSelectForm(forms.Form):
     searched = forms.MultipleChoiceField(label='Select books', choices=(('1','1')),
                                        widget=forms.CheckboxSelectMultiple, required=None)
+
+

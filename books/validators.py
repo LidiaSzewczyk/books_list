@@ -9,3 +9,17 @@ def validate_isnumeric(value):
 def validate_not_numeric(value):
     if value.isnumeric():
         raise ValidationError('Incorrect data, it is not a number.')
+
+
+def validate_is_in_db(value):
+    from books.models import Book
+    print('validator begin')
+    print('value', value)
+    a = Book.objects.filter(google_id=value)
+    print('obj', len(a))
+    print('obj', a)
+
+    if len(Book.objects.filter(google_id=value)) > 0:
+        raise ValidationError('This book is already in db')
+
+

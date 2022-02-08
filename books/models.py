@@ -2,7 +2,7 @@ from datetime import datetime
 from django.core.validators import MaxValueValidator, MinLengthValidator, MaxLengthValidator, MinValueValidator
 from django.db import models
 
-from books.validators import validate_isnumeric, validate_not_numeric
+from books.validators import validate_isnumeric, validate_not_numeric, validate_is_in_db
 
 
 class Book(models.Model):
@@ -25,6 +25,8 @@ class Book(models.Model):
                                  blank=True, null=True)
     canonicalVolumeLink = models.URLField(verbose_name='Link', null=True, blank=True)
     language = models.CharField(validators=[validate_not_numeric], max_length=20, null=True, blank=True)
+    google_id = models.CharField(max_length=20, validators=[validate_is_in_db], null=True, blank=True)
+
 
     def __str__(self):
         return self.title

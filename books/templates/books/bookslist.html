@@ -3,7 +3,7 @@
 {% load crispy_forms_tags %}
 
 {% block form %}
-  <p class="nav-item">Published &nbsp</p>
+    <p class="nav-item">Published &nbsp</p>
     <form class="d-flex" action="" method="post">
         {% csrf_token %}
         {{ form| crispy }}
@@ -12,18 +12,28 @@
 {% endblock form %}
 
 {% block content %}
-{#    <div class="col-sm-11 col-12">#}
+    {#    <div class="col-sm-11 col-12">#}
     <h1>BOOK LIST</h1>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li  {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 
     {% if  books %}
         <table class="table">
             <thead>
             <tr>
-                <th scope="col">Title<a class="my_link arrow" href="?ordering=title" >&nbsp&#8593;&nbsp</a><a class="my_link arrow"  href="?ordering=-title">&#8595;</a></th>
-                <th scope="col">Author<a class="my_link arrow" href="?ordering=authors" >&nbsp&#8593;&nbsp</a><a class="my_link arrow"  href="?ordering=-authors">&#8595;</a></th>
-                <th scope="col">Published<a class="my_link arrow" href="?ordering=publisheddate" >&nbsp&#8593;&nbsp</a><a class="my_link arrow"  href="?ordering=-publisheddate">&#8595;</a></th>
-                <th scope="col">ISBN 10</th>
-                <th scope="col">ISBN 13</th>
+                <th scope="col">Title<a class="my_link arrow" href="?ordering=title">&nbsp&#8593;&nbsp</a><a
+                        class="my_link arrow" href="?ordering=-title">&#8595;</a></th>
+                <th scope="col">Author<a class="my_link arrow" href="?ordering=authors">&nbsp&#8593;&nbsp</a><a
+                        class="my_link arrow" href="?ordering=-authors">&#8595;</a></th>
+                <th scope="col">Published<a class="my_link arrow" href="?ordering=publisheddate">&nbsp&#8593;&nbsp</a><a
+                        class="my_link arrow" href="?ordering=-publisheddate">&#8595;</a></th>
+                <th scope="col">ISBN</th>
+                <th scope="col">ID</th>
                 <th scope="col">Pages</th>
                 <th scope="col">Link</th>
                 <th scope="col">Language</th>
@@ -34,14 +44,18 @@
             <tbody>
             {% for book in books %}
                 <tr>
-                    <th scope="row"><a class="my_link" href="{% url 'books:bookupdate' book.pk %}">{{ book.title }}</a></th>
+                    <th scope="row"><a class="my_link" href="{% url 'books:bookupdate' book.pk %}">{{ book.title }}</a>
+                    </th>
                     <td>{{ book.authors }}</td>
                     <td>{{ book.publisheddate }}</td>
-                    <td>{% if  book.ISBN_10 %} {{ book.ISBN_10 }}  {% else %} No data {% endif %}</td>
-                    <td>{% if  book.ISBN_13 %} {{ book.ISBN_13 }}  {% else %} No data {% endif %}</td>
+                    <td> {% if  book.ISBN_13 %} {{ book.ISBN_13 }}
+                        {% else %}{% if  book.ISBN_10 %} {{ book.ISBN_10 }}   {% else %}  No data
+                        {% endif %}{% endif %}</td>
+                    <td>{% if  book.google_id %} {{ book.google_id }}  {% else %}No data {% endif %}</td>
                     <td>{% if  book.pageCount %} {{ book.pageCount }}  {% else %} No data {% endif %}</td>
-                    <td>{% if  book.canonicalVolumeLink %}<a class="my_link" href="{{ book.canonicalVolumeLink }}" target="_blank">
-                        {{ book.canonicalVolumeLink|truncatechars:20 }}  </a>{% else %} No data {% endif %}</td>
+                    <td>{% if  book.canonicalVolumeLink %}
+                        <a class="my_link" href="{{ book.canonicalVolumeLink }}" target="_blank">
+                            {{ book.canonicalVolumeLink|truncatechars:20 }}  </a>{% else %} No data {% endif %}</td>
                     <td>{{ book.language }}</td>
                     <td>
                         <form action="{% url 'books:bookdelete' book.pk %}" method="post">
@@ -85,13 +99,13 @@
     {% else %}
         No books
     {% endif %}
-{#    </div>#}
+    {#    </div>#}
 
-{#    <div class="col-sm-1 col-12">#}
-{#    <form action="" method="post">#}
-{#            <p class="nav-item">Published</p>#}
-{#        {% csrf_token %}#}
-{#        {{ form| crispy }}#}
-{#        <button class="btn btn-outline-success" type="submit">Search</button>#}
-{#    </form></div>#}
+    {#    <div class="col-sm-1 col-12">#}
+    {#    <form action="" method="post">#}
+    {#            <p class="nav-item">Published</p>#}
+    {#        {% csrf_token %}#}
+    {#        {{ form| crispy }}#}
+    {#        <button class="btn btn-outline-success" type="submit">Search</button>#}
+    {#    </form></div>#}
 {% endblock content %}
