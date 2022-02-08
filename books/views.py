@@ -82,7 +82,8 @@ class BooksListView(FormMixin, ListView):
 
 class BookCreateView(CreateView):
     model = Book
-    fields = '__all__'
+    fields = ('title', 'authors', 'publisheddate', 'ISBN_10', 'ISBN_13', 'pageCount',
+              'canonicalVolumeLink', 'language')
     template_name = 'books/bookcreate.html'
 
     def get_success_url(self):
@@ -128,6 +129,7 @@ class GoogleSearchView(FormView):
     form_class = GoogleSearchForm
     success_url = reverse_lazy('books:bookslist')
     google_api_url = 'https://www.googleapis.com/books/v1/volumes?q='
+    paginate_by = 1
 
     def get_form_class(self):
         return GoogleSelectForm if self.request.session.get('data') else GoogleSearchForm
@@ -190,9 +192,9 @@ class GoogleSearchView(FormView):
                                     canonicalVolumeLink=check_key(element, 'canonicalVolumeLink'),
                                     language=check_key(element, 'language'),
                                     google_id=element['id'])
-                messages.success(self.request, f"'{element['volumeInfo']['title']}' has been added to db")
+                messages.success(self.request, f'"{element["volumeInfo"]["title"]}" has been added to db')
             else:
-                messages.error(self.request, f"'{element['volumeInfo']['title']}' is already in db")
+                messages.error(self.request, f'"{element["volumeInfo"]["title"]}" is already in db')
         return redirect(reverse('books:bookslist'))
 
 
@@ -202,5 +204,3 @@ def delete_session(request):
     except KeyError:
         pass
     return redirect(reverse('books:googlesearch'))
-
-

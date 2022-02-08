@@ -27,6 +27,5 @@ class Book(models.Model):
     language = models.CharField(validators=[validate_not_numeric], max_length=20, null=True, blank=True)
     google_id = models.CharField(max_length=20, validators=[validate_is_in_db], null=True, blank=True)
 
-
     def __str__(self):
         return self.title
