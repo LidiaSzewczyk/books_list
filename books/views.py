@@ -2,14 +2,39 @@ import json
 import urllib.request
 
 from django.contrib import messages
+
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, CreateView, DeleteView, UpdateView
 from django.views.generic.edit import FormMixin, FormView
+from rest_framework import generics
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.pagination import PageNumberPagination
 
 from books.forms import FilterForm, GoogleSearchForm, GoogleSelectForm
 from books.models import Book
+from books.serializers import BookSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+
+
+class BookPagination(PageNumberPagination):
+    page_size = 10
+
+
+class BookListViewAPI(generics.ListCreateAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    pagination_class = BookPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filter_fields = {
+        'title': ["icontains"],
+        'authors': ["icontains"],
+        'language': ["icontains"],
+        'publisheddate':  ['gte', 'lte'],
+    }
+    search_fields = ['title', 'authors','language' ]
+    ordering_fields = ['title', 'authors', 'publisheddate']
 
 
 class BooksListView(FormMixin, ListView):
@@ -154,13 +179,16 @@ class GoogleSearchView(FormView):
         main_search = '+'.join(form.cleaned_data.get('main_search', '').lower().split())
         select_type = form.cleaned_data.get('select_type', '')
         detail_search = '+'.join(form.cleaned_data.get('detail_search', '').lower().split())
+        ebook = form.cleaned_data.get('ebook', '')
 
         if select_type and detail_search:
             detail_search = f'+{select_type}:{detail_search}'
         if select_type == '' and detail_search != '' and main_search != '':
             detail_search = '+' + detail_search
         # search = unicodedata.normalize('NFKD', f'{main_search}{detail_search}').encode('ASCII', 'ignore')
-        search = f'{main_search}{detail_search}'
+        if ebook:
+            ebook = f'&filter={ebook}'
+        search = f'{main_search}{detail_search}{ebook}'
         print(search)
 
         if search:

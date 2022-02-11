@@ -13,6 +13,7 @@ class FilterForm(forms.Form):
     text_search = forms.CharField(label='', required=None)
 
 
+
 class GoogleSearchForm(forms.Form):
     main_search = forms.CharField(label='', required=None)
     select_type = forms.ChoiceField(label='if you want specify, search by:',
@@ -20,6 +21,10 @@ class GoogleSearchForm(forms.Form):
                                                      ('subject', 'Subject'), ('isbn', 'ISBN')),
                                             widget=forms.RadioSelect, required=None)
     detail_search = forms.CharField(label='', required=None)
+    ebook = forms.ChoiceField(label='',
+                                    choices=(('ebooks', 'Ebooks'), ('free-ebooks', 'Free ebooks'), ('paid-ebooks', 'Paid ebooks'),
+                                             ),
+                                    widget=forms.RadioSelect, required=None)
 
 
 class GoogleSelectForm(forms.Form):

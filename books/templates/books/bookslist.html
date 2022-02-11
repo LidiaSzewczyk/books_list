@@ -12,7 +12,7 @@
 {% endblock form %}
 
 {% block content %}
-    {#    <div class="col-sm-11 col-12">#}
+
     <h1>BOOK LIST</h1>
     {% if messages %}
         <ul class="messages">
@@ -33,7 +33,6 @@
                 <th scope="col">Published<a class="my_link arrow" href="?ordering=publisheddate">&nbsp&#8593;&nbsp</a><a
                         class="my_link arrow" href="?ordering=-publisheddate">&#8595;</a></th>
                 <th scope="col">ISBN</th>
-                <th scope="col">ID</th>
                 <th scope="col">Pages</th>
                 <th scope="col">Link</th>
                 <th scope="col">Language</th>
@@ -51,7 +50,6 @@
                     <td> {% if  book.ISBN_13 %} {{ book.ISBN_13 }}
                         {% else %}{% if  book.ISBN_10 %} {{ book.ISBN_10 }}   {% else %}  No data
                         {% endif %}{% endif %}</td>
-                    <td>{% if  book.google_id %} {{ book.google_id }}  {% else %}No data {% endif %}</td>
                     <td>{% if  book.pageCount %} {{ book.pageCount }}  {% else %} No data {% endif %}</td>
                     <td>{% if  book.canonicalVolumeLink %}
                         <a class="my_link" href="{{ book.canonicalVolumeLink }}" target="_blank">
