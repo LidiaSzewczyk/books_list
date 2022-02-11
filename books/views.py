@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse
-from django.views.generic import ListView, CreateView, DeleteView, UpdateView
+from django.views.generic import ListView, CreateView, DeleteView, UpdateView, TemplateView
 from django.views.generic.edit import FormMixin, FormView
 from rest_framework import generics
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -129,106 +129,141 @@ class BookDeleteView(DeleteView):
     success_url = reverse_lazy('books:bookslist')
 
 
-def check_author(data):
-    if 'authors' in data['volumeInfo']:
-        return ', '.join(author for author in data['volumeInfo']['authors'])
-    return ''
+# def check_author(data):
+#     if 'authors' in data['volumeInfo']:
+#         return ', '.join(author for author in data['volumeInfo']['authors'])
+#     return ''
+#
+#
+# def check_key(data, key):
+#     if key in data['volumeInfo']:
+#         return data['volumeInfo'][key]
+#     return ''
+#
+#
+# def check_isbn(data, idx):
+#     if 'industryIdentifiers' in data['volumeInfo']:
+#         for element in data['volumeInfo']['industryIdentifiers']:
+#             if element['type'] == idx:
+#                 return element['identifier']
+#     return ''
+#
+#
+# class GoogleSearchView(FormView):
+#     template_name = 'books/googlelist.html'
+#     form_class = GoogleSearchForm
+#     success_url = reverse_lazy('books:bookslist')
+#     google_api_url = 'https://www.googleapis.com/books/v1/volumes?q='
+#     paginate_by = 1
+#
+#     def get_form_class(self):
+#         return GoogleSelectForm if self.request.session.get('data') else GoogleSearchForm
+#
+#     def get_form(self, *args, **kwargs):
+#         data = self.request.session.get('data')
+#         form = super().get_form(*args, **kwargs)
+#
+#         if data:
+#             books = []
+#             for item in data['items']:
+#                 new_book = [check_key(item, 'title'), check_author(item), check_key(item, 'publishedDate')[:4],
+#                             check_key(item, 'language'), check_key(item, 'canonicalVolumeLink')]
+#                 new_book = ' - '.join(new_book)
+#                 choice = item['id'], new_book
+#                 books.append(choice)
+#                 form.fields['searched'].choices = books
+#
+#         return form
+#
+#     def form_valid(self, form):
+#         main_search = '+'.join(form.cleaned_data.get('main_search', '').lower().split())
+#         select_type = form.cleaned_data.get('select_type', '')
+#         detail_search = '+'.join(form.cleaned_data.get('detail_search', '').lower().split())
+#         ebook = form.cleaned_data.get('ebook', '')
+#
+#         if select_type and detail_search:
+#             detail_search = f'+{select_type}:{detail_search}'
+#         if select_type == '' and detail_search != '' and main_search != '':
+#             detail_search = '+' + detail_search
+#         # search = unicodedata.normalize('NFKD', f'{main_search}{detail_search}').encode('ASCII', 'ignore')
+#         if ebook:
+#             ebook = f'&filter={ebook}'
+#         search = f'{main_search}{detail_search}{ebook}'
+#         print(search)
+#
+#         if search:
+#             with urllib.request.urlopen(url=f'{self.google_api_url}{search}') as r:
+#                 response = r.read().decode('UTF-8')
+#                 data = json.loads(response)
+#
+#             if data.get('totalItems', 0) == 0:
+#                 messages.error(self.request, "No such book. Try again.")
+#                 return redirect(reverse('books:googlesearch'))
+#
+#             if data.get('totalItems') > 0:
+#                 self.request.session['data'] = data
+#                 return redirect(reverse('books:googlesearch'))
+#
+#         data = self.request.session.get('data', {})
+#         self.request.session.clear()
+#         books = [book for book in data['items'] if book['id'] in form.cleaned_data.get('searched')]
+#
+#         for element in books:
+#             if len(Book.objects.filter(google_id=element['id'])) == 0:
+#                 Book.objects.create(title=element['volumeInfo']['title'],
+#                                     authors=check_author(element),
+#                                     publisheddate=int(check_key(element, 'publishedDate')[:4]) if check_key(element,
+#                                                                                                             'publishedDate') else None,
+#                                     ISBN_10=check_isbn(element, 'ISBN_10'),
+#                                     ISBN_13=check_isbn(element, 'ISBN_13'),
+#                                     pageCount=check_key(element, 'pageCount'),
+#                                     canonicalVolumeLink=check_key(element, 'canonicalVolumeLink'),
+#                                     language=check_key(element, 'language'),
+#                                     google_id=element['id'])
+#                 messages.success(self.request, f'"{element["volumeInfo"]["title"]}" has been added to db')
+#             else:
+#                 messages.error(self.request, f'"{element["volumeInfo"]["title"]}" is already in db')
+#         return redirect(reverse('books:bookslist'))
+#
+#
+# def delete_session(request):
+#     try:
+#         request.session.clear()
+#     except KeyError:
+#         pass
+#     return redirect(reverse('books:googlesearch'))
 
 
-def check_key(data, key):
-    if key in data['volumeInfo']:
-        return data['volumeInfo'][key]
-    return ''
+class GoogleSearchView(TemplateView):
+    template_name = 'books/googlesearch.html'
 
 
-def check_isbn(data, idx):
-    if 'industryIdentifiers' in data['volumeInfo']:
-        for element in data['volumeInfo']['industryIdentifiers']:
-            if element['type'] == idx:
-                return element['identifier']
-    return ''
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['form'] = GoogleSearchForm(self.request.GET) if self.request.GET else GoogleSearchForm()
+        return ctx
 
 
-class GoogleSearchView(FormView):
+    def get(self, request, *args, **kwargs):
+        form = GoogleSearchForm(request.GET)
+        print(reverse('books:googlelist'))
+        print(request.get_full_path().split('/')[-1])
+        if form.is_valid():
+
+            return redirect(reverse('books:googlelist') + request.get_full_path().split('/')[-1])
+
+        return super().get(request, *args, **kwargs)
+
+
+class GoogleListView(TemplateView):
     template_name = 'books/googlelist.html'
-    form_class = GoogleSearchForm
-    success_url = reverse_lazy('books:bookslist')
-    google_api_url = 'https://www.googleapis.com/books/v1/volumes?q='
-    paginate_by = 1
 
-    def get_form_class(self):
-        return GoogleSelectForm if self.request.session.get('data') else GoogleSearchForm
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['form'] = GoogleSearchForm(self.request.GET) if self.request.GET else GoogleSearchForm()
 
-    def get_form(self, *args, **kwargs):
-        data = self.request.session.get('data')
-        form = super().get_form(*args, **kwargs)
+        return ctx
 
-        if data:
-            books = []
-            for item in data['items']:
-                new_book = [check_key(item, 'title'), check_author(item), check_key(item, 'publishedDate')[:4],
-                            check_key(item, 'language'), check_key(item, 'canonicalVolumeLink')]
-                new_book = ' - '.join(new_book)
-                choice = item['id'], new_book
-                books.append(choice)
-                form.fields['searched'].choices = books
+class GoogleListAjaxView(TemplateView):
+    template_name = 'books/google_ajax.html'
 
-        return form
-
-    def form_valid(self, form):
-        main_search = '+'.join(form.cleaned_data.get('main_search', '').lower().split())
-        select_type = form.cleaned_data.get('select_type', '')
-        detail_search = '+'.join(form.cleaned_data.get('detail_search', '').lower().split())
-        ebook = form.cleaned_data.get('ebook', '')
-
-        if select_type and detail_search:
-            detail_search = f'+{select_type}:{detail_search}'
-        if select_type == '' and detail_search != '' and main_search != '':
-            detail_search = '+' + detail_search
-        # search = unicodedata.normalize('NFKD', f'{main_search}{detail_search}').encode('ASCII', 'ignore')
-        if ebook:
-            ebook = f'&filter={ebook}'
-        search = f'{main_search}{detail_search}{ebook}'
-        print(search)
-
-        if search:
-            with urllib.request.urlopen(url=f'{self.google_api_url}{search}') as r:
-                response = r.read().decode('UTF-8')
-                data = json.loads(response)
-
-            if data.get('totalItems', 0) == 0:
-                messages.error(self.request, "No such book. Try again.")
-                return redirect(reverse('books:googlesearch'))
-
-            if data.get('totalItems') > 0:
-                self.request.session['data'] = data
-                return redirect(reverse('books:googlesearch'))
-
-        data = self.request.session.get('data', {})
-        self.request.session.clear()
-        books = [book for book in data['items'] if book['id'] in form.cleaned_data.get('searched')]
-
-        for element in books:
-            if len(Book.objects.filter(google_id=element['id'])) == 0:
-                Book.objects.create(title=element['volumeInfo']['title'],
-                                    authors=check_author(element),
-                                    publisheddate=int(check_key(element, 'publishedDate')[:4]) if check_key(element,
-                                                                                                            'publishedDate') else None,
-                                    ISBN_10=check_isbn(element, 'ISBN_10'),
-                                    ISBN_13=check_isbn(element, 'ISBN_13'),
-                                    pageCount=check_key(element, 'pageCount'),
-                                    canonicalVolumeLink=check_key(element, 'canonicalVolumeLink'),
-                                    language=check_key(element, 'language'),
-                                    google_id=element['id'])
-                messages.success(self.request, f'"{element["volumeInfo"]["title"]}" has been added to db')
-            else:
-                messages.error(self.request, f'"{element["volumeInfo"]["title"]}" is already in db')
-        return redirect(reverse('books:bookslist'))
-
-
-def delete_session(request):
-    try:
-        request.session.clear()
-    except KeyError:
-        pass
-    return redirect(reverse('books:googlesearch'))

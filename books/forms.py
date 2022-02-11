@@ -15,7 +15,7 @@ class FilterForm(forms.Form):
 
 
 class GoogleSearchForm(forms.Form):
-    main_search = forms.CharField(label='', required=None)
+    main_search = forms.CharField(label='')
     select_type = forms.ChoiceField(label='if you want specify, search by:',
                                             choices=(('intitle', 'Title'), ('inauthor', 'Author'), ('inpublisher', 'Publisher'),
                                                      ('subject', 'Subject'), ('isbn', 'ISBN')),

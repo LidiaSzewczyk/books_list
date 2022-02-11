@@ -9,7 +9,7 @@
 {% endblock search %}
 
 {% block content %}
-<h1>HAHA</h1>
+
     <div class="col-sm-9 col-12">
         <form action="" method="get">
 {#            {% csrf_token %}#}
@@ -25,31 +25,9 @@
             </ul>
         {% endif %}
 
-    <div class="list">
-        <h2>Wyniki</h2>
-        <div id="list">
-
-        </div>
-    </div>
     </div>
     <div class="col-sm-2 col12">
+
+
     </div>
-
-
-<script>
-  const url = '{% url "books:googlelist_ajax" %}';
-
-    const resultsRef = document.getElementById('list')
-    const getData = async () => {
-        const response = await fetch(url);
-        const data = await response.text();
-        console.log(data)
-        resultsRef.innerHTML = resultsRef.innerText +  data
-    }
-    const times = setInterval(getData, 1000)
-
-    setTimeout(() => {
-        clearInterval(times)
-    }, 10000)
-</script>
 {% endblock content %}
