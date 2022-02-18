@@ -10,16 +10,12 @@ from django.views.generic import ListView, CreateView, DeleteView, UpdateView
 from django.views.generic.edit import FormMixin, FormView
 from rest_framework import generics
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.pagination import PageNumberPagination
 
 from books.forms import FilterForm, GoogleSearchForm, GoogleSelectForm
+from books.helpers import BookPagination, check_key, check_author, check_isbn, take_from_form
 from books.models import Book
 from books.serializers import BookSerializer
 from django_filters.rest_framework import DjangoFilterBackend
-
-
-class BookPagination(PageNumberPagination):
-    page_size = 10
 
 
 class BookListViewAPI(generics.ListCreateAPIView):
@@ -31,9 +27,9 @@ class BookListViewAPI(generics.ListCreateAPIView):
         'title': ["icontains"],
         'authors': ["icontains"],
         'language': ["icontains"],
-        'publisheddate':  ['gte', 'lte'],
+        'publisheddate': ['gte', 'lte'],
     }
-    search_fields = ['title', 'authors','language' ]
+    search_fields = ['title', 'authors', 'language']
     ordering_fields = ['title', 'authors', 'publisheddate']
 
 
@@ -117,7 +113,8 @@ class BookCreateView(CreateView):
 
 class BookUpdateView(UpdateView):
     model = Book
-    fields = ('__all__')
+    fields = ('title', 'authors', 'publisheddate', 'ISBN_10', 'ISBN_13', 'pageCount',
+              'canonicalVolumeLink', 'language')
     template_name = 'books/bookcreate.html'
 
     def get_success_url(self):
@@ -127,26 +124,6 @@ class BookUpdateView(UpdateView):
 class BookDeleteView(DeleteView):
     model = Book
     success_url = reverse_lazy('books:bookslist')
-
-
-def check_author(data):
-    if 'authors' in data['volumeInfo']:
-        return ', '.join(author for author in data['volumeInfo']['authors'])
-    return ''
-
-
-def check_key(data, key):
-    if key in data['volumeInfo']:
-        return data['volumeInfo'][key]
-    return ''
-
-
-def check_isbn(data, idx):
-    if 'industryIdentifiers' in data['volumeInfo']:
-        for element in data['volumeInfo']['industryIdentifiers']:
-            if element['type'] == idx:
-                return element['identifier']
-    return ''
 
 
 class GoogleSearchView(FormView):
@@ -167,7 +144,7 @@ class GoogleSearchView(FormView):
             books = []
             for item in data['items']:
                 new_book = [check_key(item, 'title'), check_author(item), check_key(item, 'publishedDate')[:4],
-                            check_key(item, 'language'), check_key(item, 'canonicalVolumeLink')]
+                            check_key(item, 'language')]
                 new_book = ' - '.join(new_book)
                 choice = item['id'], new_book
                 books.append(choice)
@@ -176,23 +153,8 @@ class GoogleSearchView(FormView):
         return form
 
     def form_valid(self, form):
-        main_search = '+'.join(form.cleaned_data.get('main_search', '').lower().split())
-        select_type = form.cleaned_data.get('select_type', '')
-        detail_search = '+'.join(form.cleaned_data.get('detail_search', '').lower().split())
-        ebook = form.cleaned_data.get('ebook', '')
-
-        if select_type and detail_search:
-            detail_search = f'+{select_type}:{detail_search}'
-        if select_type == '' and detail_search != '' and main_search != '':
-            detail_search = '+' + detail_search
-        # search = unicodedata.normalize('NFKD', f'{main_search}{detail_search}').encode('ASCII', 'ignore')
-        if ebook:
-            ebook = f'&filter={ebook}'
-        search = f'{main_search}{detail_search}{ebook}'
-        print(search)
-
-        if search:
-            with urllib.request.urlopen(url=f'{self.google_api_url}{search}') as r:
+        if take_from_form(form):
+            with urllib.request.urlopen(url=f'{self.google_api_url}{take_from_form(form)}&maxResults=20') as r:
                 response = r.read().decode('UTF-8')
                 data = json.loads(response)
 
